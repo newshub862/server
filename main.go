@@ -1,12 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"newshub-server/controllers"
 	"newshub-server/middleware"
@@ -26,31 +23,7 @@ func init() {
 	pathPtr := flag.String("config", defaultConfigPath, "Path for configuration file")
 	flag.Parse()
 
-	if pathPtr == nil || *pathPtr == "" {
-		panic("No config path")
-	}
-
-	bytes, err := ioutil.ReadFile(*pathPtr)
-
-	if err != nil {
-		panic("Read config file error")
-	}
-
-	if *pathPtr == defaultConfigPath {
-		currentDir, _ := os.Getwd()
-		conf = &models.Config{FilePath: currentDir + string(os.PathSeparator) + "cfg.json"}
-	} else {
-		conf = &models.Config{FilePath: *pathPtr}
-	}
-
-	// set default values
-	conf.OPMLPath, _ = os.Getwd()
-	conf.PageSize = 20
-
-	if err = json.Unmarshal(bytes, &conf); err != nil {
-		panic(err.Error())
-	}
-
+	conf = models.NewConfig(*pathPtr)
 }
 
 func createRouter() http.Handler {

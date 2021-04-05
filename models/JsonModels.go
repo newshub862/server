@@ -1,6 +1,12 @@
 package models
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+
+	"github.com/dgrijalva/jwt-go"
+)
 
 // Config - app config, create from config file
 type Config struct {
@@ -12,10 +18,35 @@ type Config struct {
 	DbUser           string `json:"db_user"`
 	DbPassword       string `json:"db_password"`
 	DbPort           int    `json:"db_port"`
-	OPMLPath         string `json:"opml_path"`
-	FilePath         string
 	JwtSign          string `json:"jwt_sign"`
 	PageSize         int    `json:"page_size"`
+}
+
+// NewConfig return new config struct pointer
+func NewConfig(path string) *Config {
+	fromEnv := os.Getenv("FROM_ENV") == "true"
+	cfg := new(Config)
+	var jsonBytes []byte
+
+	if fromEnv {
+		jsonBytes = []byte(os.Getenv("CFG"))
+	} else {
+		var err error
+
+		jsonBytes, err = ioutil.ReadFile(path)
+		if err != nil {
+			panic("Read config file error")
+		}
+	}
+
+	// set default values
+	cfg.PageSize = 20
+
+	if err := json.Unmarshal(jsonBytes, cfg); err != nil {
+		panic(err.Error())
+	}
+
+	return cfg
 }
 
 type SettingsData struct {
